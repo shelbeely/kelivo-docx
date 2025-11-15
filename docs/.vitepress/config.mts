@@ -72,6 +72,13 @@ export default defineConfig({
                 { text: 'Anthropic', link: '/docs/providers/anthropic' },
                 { text: 'Google', link: '/docs/providers/google' }
               ]
+            },
+            {
+              text: 'Guides',
+              items: [
+                { text: 'Troubleshooting', link: '/docs/troubleshooting' },
+                { text: 'Best Practices', link: '/docs/best-practices' }
+              ]
             }
           ]
         },
