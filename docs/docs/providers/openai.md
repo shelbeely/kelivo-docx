@@ -327,15 +327,274 @@ https://YOUR-RESOURCE-NAME.openai.azure.com
 
 See [Custom Requests](/docs/assistant/custom-requests) for details.
 
-### OpenAI-Compatible Providers
+### OpenRouter - Access 200+ Models via OpenAI API
 
-Use gateways offering OpenAI-compatible APIs:
+**OpenRouter** is an OpenAI-compatible gateway that aggregates models from multiple providers into a single API. It offers significantly more model choices than OpenAI alone, with unified pricing and a single API key.
+
+#### Why Use OpenRouter?
+
+**Access to 200+ Models**:
+- OpenAI (GPT-4, GPT-3.5)
+- Anthropic (Claude 3.5, Claude 3)
+- Google (Gemini Pro, Gemini Flash)
+- Meta (Llama 3.1, Llama 3.2)
+- Mistral (Mistral Large, Mistral Medium)
+- Cohere (Command R+)
+- Open-source models (Mixtral, Yi, Qwen)
+- And many more
+
+**Benefits**:
+- **Single API key** for all providers
+- **Unified pricing** across models
+- **Lower costs** for many models
+- **No rate limits** on most models
+- **Fallback support** (auto-switch if model is down)
+- **Model routing** (automatically choose best model)
+- **Usage tracking** in one dashboard
+
+#### Getting Started with OpenRouter
+
+**1. Create an API Key**
+
+1. Visit https://openrouter.ai
+2. Sign up or log in
+3. Go to **Keys** section
+4. Click **Create Key**
+5. **Name your key** (e.g., "Kelivo")
+6. **Copy the key** (starts with `sk-or-v1-`)
+7. **Add credits** (minimum $5, pay-as-you-go)
+
+**2. Add to Kelivo**
+
+1. Go to **Settings → Providers**
+2. Tap **Add Provider** or **+**
+3. Fill in details:
+   - **Name**: "OpenRouter" or custom name
+   - **Provider Type**: OpenAI (OpenRouter is OpenAI-compatible)
+   - **Base URL**: `https://openrouter.ai/api/v1`
+   - **API Key**: Paste your OpenRouter key (sk-or-v1-...)
+   - **Default Model**: See model recommendations below
+4. **Save**
+
+**3. Test Connection**
+
+Send a test message to verify:
+```
+User: Hello!
+AI: Hello! How can I help you today?
+```
+
+#### Recommended Models on OpenRouter
+
+**Best Value Models**:
+
+**anthropic/claude-3.5-sonnet** (Highly Recommended)
+- **Best for**: General purpose, excellent quality
+- **Context**: 200K tokens
+- **Cost**: ~$3/$15 per 1M tokens (input/output)
+- **Features**: Vision, function calling, artifacts
+- **Why**: Best quality-to-price ratio, beats GPT-4o
+
+**google/gemini-pro-1.5** (Free Tier Available)
+- **Best for**: Long context, cost-conscious use
+- **Context**: 2M tokens (!!)
+- **Cost**: FREE up to limits, then $0.35/$1.05 per 1M tokens
+- **Features**: Vision, massive context window
+- **Why**: Incredible value, huge context
+
+**meta-llama/llama-3.1-70b-instruct** (Open Source)
+- **Best for**: Privacy-conscious, open source preference
+- **Context**: 128K tokens
+- **Cost**: ~$0.50/$0.75 per 1M tokens
+- **Features**: Strong reasoning, fast
+- **Why**: Excellent open-source option
+
+**openai/gpt-4o** (Latest OpenAI)
+- **Best for**: Tasks requiring latest GPT-4 capabilities
+- **Context**: 128K tokens
+- **Cost**: $2.50/$10 per 1M tokens (same as OpenAI)
+- **Features**: Vision, function calling, fast
+- **Why**: Latest OpenAI model, same price
+
+**Budget Options**:
+
+**mistralai/mistral-7b-instruct** (~$0.07/$0.07 per 1M tokens)
+- Fast, cheap, good for simple tasks
+
+**google/gemini-flash-1.5** (~$0.075/$0.30 per 1M tokens)
+- Very fast, excellent for high-volume simple tasks
+
+**meta-llama/llama-3.2-3b-instruct** (~$0.06/$0.06 per 1M tokens)
+- Extremely cheap, good for basic tasks
+
+**Premium Options**:
+
+**anthropic/claude-3-opus** (~$15/$75 per 1M tokens)
+- Most capable Claude model, best reasoning
+
+**openai/o1-preview** (~$15/$60 per 1M tokens)
+- Advanced reasoning, complex problem solving
+
+**google/gemini-pro-1.5-exp** (~$0.35/$1.05 per 1M tokens)
+- Experimental Gemini with latest features
+
+#### Model Categories
+
+**By Use Case**:
+
+**General Purpose**:
+- anthropic/claude-3.5-sonnet (best overall)
+- openai/gpt-4o (latest GPT-4)
+- google/gemini-pro-1.5 (best value)
+
+**Coding**:
+- anthropic/claude-3.5-sonnet (excellent at code)
+- meta-llama/llama-3.1-405b-instruct (open source, powerful)
+- openai/gpt-4o (strong coding)
+
+**Long Context**:
+- google/gemini-pro-1.5 (2M tokens!)
+- anthropic/claude-3.5-sonnet (200K tokens)
+- openai/gpt-4o (128K tokens)
+
+**Fast & Cheap**:
+- google/gemini-flash-1.5 (very fast)
+- mistralai/mistral-7b-instruct (cheap)
+- meta-llama/llama-3.2-3b-instruct (cheapest)
+
+**Reasoning & Analysis**:
+- openai/o1-preview (advanced reasoning)
+- anthropic/claude-3-opus (deep thinking)
+- perplexity/llama-3.1-sonar-large (web search integrated)
+
+**Vision**:
+- anthropic/claude-3.5-sonnet (excellent vision)
+- openai/gpt-4o (strong vision)
+- google/gemini-pro-1.5 (good vision)
+
+#### Pricing Comparison
+
+OpenRouter often offers **better pricing** than direct providers:
+
+| Model | OpenRouter | Direct Provider | Savings |
+|-------|------------|-----------------|---------|
+| Claude 3.5 Sonnet | $3/$15 per 1M | $3/$15 per 1M | Same |
+| GPT-4o | $2.50/$10 per 1M | $2.50/$10 per 1M | Same |
+| Gemini Pro 1.5 | Free tier! | Paid only | Better |
+| Llama 3.1 70B | $0.50/$0.75 per 1M | Self-host | Much easier |
+| Mistral 7B | $0.07/$0.07 per 1M | €0.20+ | ~65% savings |
+
+**Pay-as-you-go**: No subscriptions, only pay for what you use.
+
+#### OpenRouter-Specific Features
+
+**Model Fallbacks**:
+Add to custom headers:
+```json
+{
+  "X-Title": "Kelivo Chat",
+  "HTTP-Referer": "https://kelivo.app",
+  "X-Model-Fallbacks": ["anthropic/claude-3.5-sonnet", "openai/gpt-4o"]
+}
+```
+If primary model fails, automatically uses fallback.
+
+**Model Routing** (Auto-select):
+Use `openrouter/auto` as model name to let OpenRouter choose the best model for your prompt.
+
+**Provider Preferences**:
+Route models through specific providers for better rates or availability.
+
+**Usage Tracking**:
+Monitor all model usage in one dashboard at https://openrouter.ai/activity
+
+#### Configuration Tips
+
+**Custom Headers** (Optional but Recommended):
+
+Add these in Kelivo provider settings:
+```json
+{
+  "HTTP-Referer": "https://kelivo.app",
+  "X-Title": "Kelivo Mobile"
+}
+```
+
+**Benefits**:
+- Helps OpenRouter improve service
+- May unlock better rates in future
+- Enables better analytics
+
+**Model Selection**:
+
+Format: `provider/model-name`
+- ✅ Correct: `anthropic/claude-3.5-sonnet`
+- ✅ Correct: `openai/gpt-4o`
+- ✅ Correct: `google/gemini-pro-1.5`
+- ❌ Wrong: `claude-3.5-sonnet` (missing provider)
+
+**Find Models**: Browse all available models at https://openrouter.ai/models
+
+#### Troubleshooting
+
+**Invalid Model Name**:
+- Use full format: `provider/model-name`
+- Check model list: https://openrouter.ai/models
+- Some models require special access
+
+**Insufficient Credits**:
+- Add more credits at https://openrouter.ai/credits
+- Minimum $5 top-up
+- Credits never expire
+
+**Rate Limits**:
+- Most models have no rate limits
+- Some premium models may have provider-specific limits
+- Check model page for details
+
+**Model Unavailable**:
+- Provider may be temporarily down
+- Use model fallbacks feature
+- Try alternative model
+
+#### Cost Optimization
+
+**Smart Model Selection**:
+1. **Start with free tier**: google/gemini-pro-1.5 for most tasks
+2. **Use cheap models**: mistralai/mistral-7b-instruct for simple tasks
+3. **Reserve premium**: anthropic/claude-3.5-sonnet for complex work
+4. **Avoid expensive**: Only use o1-preview or claude-3-opus when needed
+
+**Monitor Usage**:
+- Check dashboard: https://openrouter.ai/activity
+- Set up spending alerts
+- Review per-model costs
+
+**Context Management**:
+- Keep conversations focused
+- Clear history regularly
+- Use smaller models for follow-ups
+
+#### Resources
+
+**Official Links**:
+- OpenRouter Homepage: https://openrouter.ai
+- Model List: https://openrouter.ai/models
+- Pricing: https://openrouter.ai/docs#pricing
+- API Docs: https://openrouter.ai/docs
+- Activity Dashboard: https://openrouter.ai/activity
+
+**Community**:
+- Discord: https://discord.gg/openrouter
+- GitHub: https://github.com/OpenRouterTeam
+
+### Other OpenAI-Compatible Providers
 
 **Examples**:
-- **OpenRouter**: Aggregates many providers
-- **Together AI**: Open-source models
-- **Groq**: Fast inference for open models
+- **Together AI**: Open-source models, fast inference
+- **Groq**: Ultra-fast inference for open models
 - **Anyscale**: Llama and Mistral models
+- **Fireworks AI**: Fast open-source models
 
 **Setup**: Change base URL, use their API key
 
