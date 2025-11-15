@@ -395,12 +395,12 @@ AI: Hello! How can I help you today?
 - **Features**: Vision, function calling, artifacts
 - **Why**: Best quality-to-price ratio, beats GPT-4o
 
-**google/gemini-pro-1.5** (Free Tier Available)
-- **Best for**: Long context, cost-conscious use
-- **Context**: 2M tokens (!!)
-- **Cost**: FREE up to limits, then $0.35/$1.05 per 1M tokens
-- **Features**: Vision, massive context window
-- **Why**: Incredible value, huge context
+**google/gemini-flash-1.5** (Excellent Value)
+- **Best for**: Fast responses, cost-conscious use
+- **Context**: 1M tokens
+- **Cost**: ~$0.075/$0.30 per 1M tokens (input/output)
+- **Features**: Vision, fast inference, long context
+- **Why**: Excellent speed-to-cost ratio
 
 **meta-llama/llama-3.1-70b-instruct** (Open Source)
 - **Best for**: Privacy-conscious, open source preference
@@ -421,8 +421,8 @@ AI: Hello! How can I help you today?
 **mistralai/mistral-7b-instruct** (~$0.07/$0.07 per 1M tokens)
 - Fast, cheap, good for simple tasks
 
-**google/gemini-flash-1.5** (~$0.075/$0.30 per 1M tokens)
-- Very fast, excellent for high-volume simple tasks
+**meta-llama/llama-3.1-8b-instruct** (~$0.06/$0.06 per 1M tokens)
+- Very affordable, good for basic tasks
 
 **meta-llama/llama-3.2-3b-instruct** (~$0.06/$0.06 per 1M tokens)
 - Extremely cheap, good for basic tasks
@@ -435,8 +435,8 @@ AI: Hello! How can I help you today?
 **openai/o1-preview** (~$15/$60 per 1M tokens)
 - Advanced reasoning, complex problem solving
 
-**google/gemini-pro-1.5-exp** (~$0.35/$1.05 per 1M tokens)
-- Experimental Gemini with latest features
+**google/gemini-exp-1206** (Free during preview)
+- Experimental Gemini with latest features, free during preview period
 
 #### Model Categories
 
@@ -445,7 +445,7 @@ AI: Hello! How can I help you today?
 **General Purpose**:
 - anthropic/claude-3.5-sonnet (best overall)
 - openai/gpt-4o (latest GPT-4)
-- google/gemini-pro-1.5 (best value)
+- google/gemini-flash-1.5 (fast and affordable)
 
 **Coding**:
 - anthropic/claude-3.5-sonnet (excellent at code)
@@ -453,7 +453,7 @@ AI: Hello! How can I help you today?
 - openai/gpt-4o (strong coding)
 
 **Long Context**:
-- google/gemini-pro-1.5 (2M tokens!)
+- google/gemini-flash-1.5 (1M tokens)
 - anthropic/claude-3.5-sonnet (200K tokens)
 - openai/gpt-4o (128K tokens)
 
@@ -470,7 +470,7 @@ AI: Hello! How can I help you today?
 **Vision**:
 - anthropic/claude-3.5-sonnet (excellent vision)
 - openai/gpt-4o (strong vision)
-- google/gemini-pro-1.5 (good vision)
+- google/gemini-flash-1.5 (good vision)
 
 #### Pricing Comparison
 
@@ -480,9 +480,9 @@ OpenRouter often offers **better pricing** than direct providers:
 |-------|------------|-----------------|---------|
 | Claude 3.5 Sonnet | $3/$15 per 1M | $3/$15 per 1M | Same |
 | GPT-4o | $2.50/$10 per 1M | $2.50/$10 per 1M | Same |
-| Gemini Pro 1.5 | Free tier! | Paid only | Better |
+| Gemini Flash 1.5 | $0.075/$0.30 per 1M | $0.075/$0.30 per 1M | Same |
 | Llama 3.1 70B | $0.50/$0.75 per 1M | Self-host | Much easier |
-| Mistral 7B | $0.07/$0.07 per 1M | €0.20+ | ~65% savings |
+| Mistral 7B | $0.07/$0.07 per 1M | Self-host | Much easier |
 
 **Pay-as-you-go**: No subscriptions, only pay for what you use.
 
@@ -560,7 +560,7 @@ Format: `provider/model-name`
 #### Cost Optimization
 
 **Smart Model Selection**:
-1. **Start with free tier**: google/gemini-pro-1.5 for most tasks
+1. **Start with affordable models**: google/gemini-flash-1.5 or meta-llama/llama-3.1-8b-instruct for most tasks
 2. **Use cheap models**: mistralai/mistral-7b-instruct for simple tasks
 3. **Reserve premium**: anthropic/claude-3.5-sonnet for complex work
 4. **Avoid expensive**: Only use o1-preview or claude-3-opus when needed
