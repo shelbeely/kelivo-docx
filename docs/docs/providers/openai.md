@@ -386,6 +386,12 @@ AI: Hello! How can I help you today?
 
 #### Recommended Models on OpenRouter
 
+::: tip Model Availability
+Model names, pricing, and availability change frequently. For the most up-to-date list of available models, visit https://openrouter.ai/models
+
+The models listed below are examples based on common options. Always verify current availability and pricing.
+:::
+
 **Best Value Models**:
 
 **anthropic/claude-3.5-sonnet** (Highly Recommended)
@@ -534,6 +540,10 @@ Format: `provider/model-name`
 - ❌ Wrong: `claude-3.5-sonnet` (missing provider)
 
 **Find Models**: Browse all available models at https://openrouter.ai/models
+
+::: tip Verify Before Use
+Model availability and pricing change regularly. Check the official OpenRouter models page for current information before configuring your provider.
+:::
 
 #### Troubleshooting
 
