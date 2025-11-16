@@ -1,0 +1,61 @@
+name: Update OpenRouter Models
+
+on:
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  fetch-models:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Fetch OpenRouter models
+        id: fetch
+        run: |
+          echo "Fetching popular models from OpenRouter API..."
+          
+          # Fetch models from OpenRouter API (public endpoint, no auth needed)
+          MODELS_JSON=$(curl -s https://openrouter.ai/api/v1/models)
+          
+          # Parse and extract popular models
+          echo "$MODELS_JSON" | jq -r '.data[] | select(.id | contains("claude-3.5-sonnet") or contains("gpt-4o") or contains("llama-3.1") or contains("gemini-flash")) | "\(.id) - \(.name)"' > /tmp/popular_models.txt
+          
+          # Count models found
+          MODEL_COUNT=$(wc -l < /tmp/popular_models.txt)
+          echo "Found $MODEL_COUNT popular models"
+          
+          # Display the models
+          cat /tmp/popular_models.txt
+          
+          echo "models_count=$MODEL_COUNT" >> $GITHUB_OUTPUT
+          
+      - name: Create artifact with model list
+        uses: actions/upload-artifact@v4
+        with:
+          name: openrouter-models
+          path: /tmp/popular_models.txt
+          retention-days: 30
+          
+      - name: Comment on latest PR (if any)
+        if: steps.fetch.outputs.models_count > 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Find the most recent open PR that modifies OpenAI provider docs
+          PR_NUMBER=$(gh pr list --state open --json number,files --jq '.[] | select(.files[].path | contains("openai.md")) | .number' | head -1)
+          
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Found PR #$PR_NUMBER that modifies OpenAI docs"
+            
+            # Create a comment with the model list
+            COMMENT="**OpenRouter Models Update** 🤖\n\nFetched popular models from OpenRouter API:\n\n\`\`\`\n$(cat /tmp/popular_models.txt)\n\`\`\`\n\nLast updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            
+            echo -e "$COMMENT" | gh pr comment "$PR_NUMBER" --body-file -
+          else
+            echo "No open PR found that modifies openai.md"
+          fi
