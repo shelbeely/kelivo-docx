@@ -268,6 +268,295 @@ To share assistant configurations without chat history:
 3. Recipient uses Merge mode to add configurations
 4. Their existing chats and settings remain intact
 
+## Converting ChatGPT Export to Kelivo Format
+
+If you're migrating from ChatGPT, you can convert your exported `conversations.json` to Kelivo's format using a conversion script.
+
+### ChatGPT Export Format
+
+ChatGPT's export format looks like this:
+
+```json
+[
+  {
+    "title": "Conversation Title",
+    "create_time": 1699000000.123,
+    "update_time": 1699000100.456,
+    "mapping": {
+      "message-id-1": {
+        "id": "message-id-1",
+        "message": {
+          "author": {"role": "user"},
+          "content": {"parts": ["Hello!"]}
+        },
+        "parent": null,
+        "children": ["message-id-2"]
+      },
+      "message-id-2": {
+        "id": "message-id-2",
+        "message": {
+          "author": {"role": "assistant"},
+          "content": {"parts": ["Hi there!"]}
+        },
+        "parent": "message-id-1",
+        "children": []
+      }
+    }
+  }
+]
+```
+
+### Conversion Script (Python)
+
+Save the following script as `convert_chatgpt_to_kelivo.py`:
+
+```python
+import json
+import uuid
+from datetime import datetime
+import sys
+
+def convert_chatgpt_to_kelivo(input_file, output_file):
+    """Convert ChatGPT conversations.json to Kelivo chats.json format"""
+    
+    with open(input_file, 'r', encoding='utf-8') as f:
+        chatgpt_data = json.load(f)
+    
+    kelivo_conversations = []
+    kelivo_messages = []
+    
+    for conv in chatgpt_data:
+        # Generate conversation ID
+        conv_id = str(uuid.uuid4())
+        
+        # Convert timestamps (ChatGPT uses Unix timestamps)
+        created_at = datetime.fromtimestamp(conv.get('create_time', 0)).isoformat() + 'Z'
+        updated_at = datetime.fromtimestamp(conv.get('update_time', conv.get('create_time', 0))).isoformat() + 'Z'
+        
+        # Create conversation entry
+        kelivo_conversations.append({
+            "id": conv_id,
+            "title": conv.get('title', 'Imported Conversation'),
+            "assistantId": None,  # Will use default assistant
+            "createdAt": created_at,
+            "updatedAt": updated_at
+        })
+        
+        # Extract messages from mapping (traverse tree structure)
+        mapping = conv.get('mapping', {})
+        messages = extract_messages_from_mapping(mapping, conv_id)
+        kelivo_messages.extend(messages)
+    
+    # Create Kelivo chats.json structure
+    kelivo_data = {
+        "version": 1,
+        "conversations": kelivo_conversations,
+        "messages": kelivo_messages,
+        "toolEvents": {},
+        "geminiThoughtSigs": {}
+    }
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(kelivo_data, f, ensure_ascii=False, indent=2)
+    
+    print(f"Converted {len(kelivo_conversations)} conversations with {len(kelivo_messages)} messages")
+
+def extract_messages_from_mapping(mapping, conv_id):
+    """Extract messages from ChatGPT's tree structure in order"""
+    messages = []
+    
+    # Find root message (no parent or parent not in mapping)
+    root_id = None
+    for msg_id, msg_data in mapping.items():
+        parent = msg_data.get('parent')
+        if parent is None or parent not in mapping:
+            root_id = msg_id
+            break
+    
+    if not root_id:
+        return messages
+    
+    # Traverse tree to get messages in order
+    def traverse(msg_id):
+        if msg_id not in mapping:
+            return
+        
+        msg_data = mapping[msg_id]
+        msg = msg_data.get('message')
+        
+        if msg and msg.get('content') and msg['content'].get('parts'):
+            author = msg.get('author', {}).get('role', 'user')
+            content_parts = msg['content']['parts']
+            content = ''.join(str(p) for p in content_parts if isinstance(p, str))
+            
+            # Only include user and assistant messages
+            if author in ['user', 'assistant'] and content.strip():
+                created_at = datetime.fromtimestamp(
+                    msg.get('create_time', 0) or 0
+                ).isoformat() + 'Z' if msg.get('create_time') else datetime.now().isoformat() + 'Z'
+                
+                messages.append({
+                    "id": str(uuid.uuid4()),
+                    "conversationId": conv_id,
+                    "role": author,
+                    "content": content,
+                    "createdAt": created_at
+                })
+        
+        # Continue to children
+        for child_id in msg_data.get('children', []):
+            traverse(child_id)
+    
+    traverse(root_id)
+    return messages
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print("Usage: python convert_chatgpt_to_kelivo.py <input_conversations.json> <output_chats.json>")
+        sys.exit(1)
+    
+    convert_chatgpt_to_kelivo(sys.argv[1], sys.argv[2])
+```
+
+### Using the Conversion Script
+
+1. **Export your ChatGPT data**:
+   - Go to ChatGPT Settings → Data controls → Export data
+   - Download and extract the ZIP file
+   - Find `conversations.json`
+
+2. **Run the conversion**:
+   ```bash
+   python convert_chatgpt_to_kelivo.py conversations.json chats.json
+   ```
+
+3. **Create a Kelivo backup structure**:
+   ```bash
+   mkdir kelivo_import
+   mv chats.json kelivo_import/
+   echo '{}' > kelivo_import/settings.json
+   cd kelivo_import && zip -r ../chatgpt_import.zip . && cd ..
+   ```
+
+4. **Import into Kelivo**:
+   - Open Kelivo → Settings → Backup & Restore
+   - Tap "Import from File"
+   - Select `chatgpt_import.zip`
+   - Choose **Merge** mode to add to existing conversations
+
+### Conversion Notes
+
+| ChatGPT | Kelivo | Notes |
+|---------|--------|-------|
+| `title` | `title` | Direct mapping |
+| `create_time` | `createdAt` | Unix timestamp → ISO8601 |
+| `mapping` | `messages` | Tree → flat array |
+| `author.role` | `role` | `user` or `assistant` |
+| `content.parts` | `content` | Array joined to string |
+
+::: warning Limitations
+- **System messages** are skipped (ChatGPT's hidden prompts)
+- **Images and files** are not converted (only text)
+- **Branched conversations** use the main thread only
+- **Tool calls** (plugins, code interpreter) are simplified to text
+:::
+
+### Alternative: Node.js Script
+
+If you prefer JavaScript/Node.js:
+
+```javascript
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+
+function convertChatGPTToKelivo(inputFile, outputFile) {
+  const chatgptData = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
+  
+  const conversations = [];
+  const messages = [];
+  
+  chatgptData.forEach(conv => {
+    const convId = uuidv4();
+    const createdAt = new Date((conv.create_time || 0) * 1000).toISOString();
+    const updatedAt = new Date((conv.update_time || conv.create_time || 0) * 1000).toISOString();
+    
+    conversations.push({
+      id: convId,
+      title: conv.title || 'Imported Conversation',
+      assistantId: null,
+      createdAt,
+      updatedAt
+    });
+    
+    // Extract messages from mapping
+    const mapping = conv.mapping || {};
+    const extracted = extractMessages(mapping, convId);
+    messages.push(...extracted);
+  });
+  
+  const kelivoData = {
+    version: 1,
+    conversations,
+    messages,
+    toolEvents: {},
+    geminiThoughtSigs: {}
+  };
+  
+  fs.writeFileSync(outputFile, JSON.stringify(kelivoData, null, 2));
+  console.log(`Converted ${conversations.length} conversations with ${messages.length} messages`);
+}
+
+function extractMessages(mapping, convId) {
+  const messages = [];
+  
+  // Find root and traverse
+  let rootId = Object.keys(mapping).find(id => {
+    const parent = mapping[id].parent;
+    return !parent || !mapping[parent];
+  });
+  
+  function traverse(msgId) {
+    if (!mapping[msgId]) return;
+    
+    const { message, children = [] } = mapping[msgId];
+    
+    if (message?.content?.parts && ['user', 'assistant'].includes(message.author?.role)) {
+      const content = message.content.parts.filter(p => typeof p === 'string').join('');
+      if (content.trim()) {
+        messages.push({
+          id: uuidv4(),
+          conversationId: convId,
+          role: message.author.role,
+          content,
+          createdAt: message.create_time 
+            ? new Date(message.create_time * 1000).toISOString()
+            : new Date().toISOString()
+        });
+      }
+    }
+    
+    children.forEach(traverse);
+  }
+  
+  if (rootId) traverse(rootId);
+  return messages;
+}
+
+// Usage: node convert.js conversations.json chats.json
+const [,, input, output] = process.argv;
+if (input && output) {
+  convertChatGPTToKelivo(input, output);
+} else {
+  console.log('Usage: node convert.js <input.json> <output.json>');
+}
+```
+
+Run with:
+```bash
+npm install uuid
+node convert.js conversations.json chats.json
+```
+
 ## Next Steps
 
 - Learn about [Assistants](/docs/assistant/basics) to create powerful AI personas

@@ -269,6 +269,295 @@ Kelivo 提供两种恢复模式来处理不同场景：
 3. 接收者使用合并模式添加配置
 4. 他们的现有聊天记录和设置保持不变
 
+## 将 ChatGPT 导出转换为 Kelivo 格式
+
+如果您正在从 ChatGPT 迁移，可以使用转换脚本将导出的 `conversations.json` 转换为 Kelivo 格式。
+
+### ChatGPT 导出格式
+
+ChatGPT 的导出格式如下：
+
+```json
+[
+  {
+    "title": "对话标题",
+    "create_time": 1699000000.123,
+    "update_time": 1699000100.456,
+    "mapping": {
+      "message-id-1": {
+        "id": "message-id-1",
+        "message": {
+          "author": {"role": "user"},
+          "content": {"parts": ["你好！"]}
+        },
+        "parent": null,
+        "children": ["message-id-2"]
+      },
+      "message-id-2": {
+        "id": "message-id-2",
+        "message": {
+          "author": {"role": "assistant"},
+          "content": {"parts": ["你好！有什么可以帮助您的？"]}
+        },
+        "parent": "message-id-1",
+        "children": []
+      }
+    }
+  }
+]
+```
+
+### 转换脚本（Python）
+
+将以下脚本保存为 `convert_chatgpt_to_kelivo.py`：
+
+```python
+import json
+import uuid
+from datetime import datetime
+import sys
+
+def convert_chatgpt_to_kelivo(input_file, output_file):
+    """将 ChatGPT conversations.json 转换为 Kelivo chats.json 格式"""
+    
+    with open(input_file, 'r', encoding='utf-8') as f:
+        chatgpt_data = json.load(f)
+    
+    kelivo_conversations = []
+    kelivo_messages = []
+    
+    for conv in chatgpt_data:
+        # 生成对话 ID
+        conv_id = str(uuid.uuid4())
+        
+        # 转换时间戳（ChatGPT 使用 Unix 时间戳）
+        created_at = datetime.fromtimestamp(conv.get('create_time', 0)).isoformat() + 'Z'
+        updated_at = datetime.fromtimestamp(conv.get('update_time', conv.get('create_time', 0))).isoformat() + 'Z'
+        
+        # 创建对话条目
+        kelivo_conversations.append({
+            "id": conv_id,
+            "title": conv.get('title', '导入的对话'),
+            "assistantId": None,  # 将使用默认助手
+            "createdAt": created_at,
+            "updatedAt": updated_at
+        })
+        
+        # 从 mapping 提取消息（遍历树结构）
+        mapping = conv.get('mapping', {})
+        messages = extract_messages_from_mapping(mapping, conv_id)
+        kelivo_messages.extend(messages)
+    
+    # 创建 Kelivo chats.json 结构
+    kelivo_data = {
+        "version": 1,
+        "conversations": kelivo_conversations,
+        "messages": kelivo_messages,
+        "toolEvents": {},
+        "geminiThoughtSigs": {}
+    }
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(kelivo_data, f, ensure_ascii=False, indent=2)
+    
+    print(f"已转换 {len(kelivo_conversations)} 个对话，共 {len(kelivo_messages)} 条消息")
+
+def extract_messages_from_mapping(mapping, conv_id):
+    """按顺序从 ChatGPT 的树结构中提取消息"""
+    messages = []
+    
+    # 找到根消息（无父级或父级不在 mapping 中）
+    root_id = None
+    for msg_id, msg_data in mapping.items():
+        parent = msg_data.get('parent')
+        if parent is None or parent not in mapping:
+            root_id = msg_id
+            break
+    
+    if not root_id:
+        return messages
+    
+    # 遍历树以按顺序获取消息
+    def traverse(msg_id):
+        if msg_id not in mapping:
+            return
+        
+        msg_data = mapping[msg_id]
+        msg = msg_data.get('message')
+        
+        if msg and msg.get('content') and msg['content'].get('parts'):
+            author = msg.get('author', {}).get('role', 'user')
+            content_parts = msg['content']['parts']
+            content = ''.join(str(p) for p in content_parts if isinstance(p, str))
+            
+            # 只包含用户和助手消息
+            if author in ['user', 'assistant'] and content.strip():
+                created_at = datetime.fromtimestamp(
+                    msg.get('create_time', 0) or 0
+                ).isoformat() + 'Z' if msg.get('create_time') else datetime.now().isoformat() + 'Z'
+                
+                messages.append({
+                    "id": str(uuid.uuid4()),
+                    "conversationId": conv_id,
+                    "role": author,
+                    "content": content,
+                    "createdAt": created_at
+                })
+        
+        # 继续处理子节点
+        for child_id in msg_data.get('children', []):
+            traverse(child_id)
+    
+    traverse(root_id)
+    return messages
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print("用法: python convert_chatgpt_to_kelivo.py <输入_conversations.json> <输出_chats.json>")
+        sys.exit(1)
+    
+    convert_chatgpt_to_kelivo(sys.argv[1], sys.argv[2])
+```
+
+### 使用转换脚本
+
+1. **导出您的 ChatGPT 数据**：
+   - 进入 ChatGPT 设置 → 数据控制 → 导出数据
+   - 下载并解压 ZIP 文件
+   - 找到 `conversations.json`
+
+2. **运行转换**：
+   ```bash
+   python convert_chatgpt_to_kelivo.py conversations.json chats.json
+   ```
+
+3. **创建 Kelivo 备份结构**：
+   ```bash
+   mkdir kelivo_import
+   mv chats.json kelivo_import/
+   echo '{}' > kelivo_import/settings.json
+   cd kelivo_import && zip -r ../chatgpt_import.zip . && cd ..
+   ```
+
+4. **导入到 Kelivo**：
+   - 打开 Kelivo → 设置 → 备份与恢复
+   - 点击"从文件导入"
+   - 选择 `chatgpt_import.zip`
+   - 选择 **合并** 模式以添加到现有对话
+
+### 转换说明
+
+| ChatGPT | Kelivo | 说明 |
+|---------|--------|------|
+| `title` | `title` | 直接映射 |
+| `create_time` | `createdAt` | Unix 时间戳 → ISO8601 |
+| `mapping` | `messages` | 树结构 → 平面数组 |
+| `author.role` | `role` | `user` 或 `assistant` |
+| `content.parts` | `content` | 数组合并为字符串 |
+
+::: warning 限制
+- **系统消息** 会被跳过（ChatGPT 的隐藏提示）
+- **图片和文件** 不会转换（仅文本）
+- **分支对话** 仅使用主线程
+- **工具调用**（插件、代码解释器）会简化为文本
+:::
+
+### 替代方案：Node.js 脚本
+
+如果您更喜欢 JavaScript/Node.js：
+
+```javascript
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+
+function convertChatGPTToKelivo(inputFile, outputFile) {
+  const chatgptData = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
+  
+  const conversations = [];
+  const messages = [];
+  
+  chatgptData.forEach(conv => {
+    const convId = uuidv4();
+    const createdAt = new Date((conv.create_time || 0) * 1000).toISOString();
+    const updatedAt = new Date((conv.update_time || conv.create_time || 0) * 1000).toISOString();
+    
+    conversations.push({
+      id: convId,
+      title: conv.title || '导入的对话',
+      assistantId: null,
+      createdAt,
+      updatedAt
+    });
+    
+    // 从 mapping 提取消息
+    const mapping = conv.mapping || {};
+    const extracted = extractMessages(mapping, convId);
+    messages.push(...extracted);
+  });
+  
+  const kelivoData = {
+    version: 1,
+    conversations,
+    messages,
+    toolEvents: {},
+    geminiThoughtSigs: {}
+  };
+  
+  fs.writeFileSync(outputFile, JSON.stringify(kelivoData, null, 2));
+  console.log(`已转换 ${conversations.length} 个对话，共 ${messages.length} 条消息`);
+}
+
+function extractMessages(mapping, convId) {
+  const messages = [];
+  
+  // 找到根节点并遍历
+  let rootId = Object.keys(mapping).find(id => {
+    const parent = mapping[id].parent;
+    return !parent || !mapping[parent];
+  });
+  
+  function traverse(msgId) {
+    if (!mapping[msgId]) return;
+    
+    const { message, children = [] } = mapping[msgId];
+    
+    if (message?.content?.parts && ['user', 'assistant'].includes(message.author?.role)) {
+      const content = message.content.parts.filter(p => typeof p === 'string').join('');
+      if (content.trim()) {
+        messages.push({
+          id: uuidv4(),
+          conversationId: convId,
+          role: message.author.role,
+          content,
+          createdAt: message.create_time 
+            ? new Date(message.create_time * 1000).toISOString()
+            : new Date().toISOString()
+        });
+      }
+    }
+    
+    children.forEach(traverse);
+  }
+  
+  if (rootId) traverse(rootId);
+  return messages;
+}
+
+// 用法: node convert.js conversations.json chats.json
+const [,, input, output] = process.argv;
+if (input && output) {
+  convertChatGPTToKelivo(input, output);
+} else {
+  console.log('用法: node convert.js <输入.json> <输出.json>');
+}
+```
+
+运行命令：
+```bash
+npm install uuid
+node convert.js conversations.json chats.json
+```
+
 ## 下一步
 
 - 了解 [助手](/zh/docs/assistant/basics) 创建强大的 AI 角色
