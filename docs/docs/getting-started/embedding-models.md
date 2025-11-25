@@ -65,15 +65,24 @@ Anthropic currently does not offer standalone embedding models. For embedding ne
 
 ### OpenRouter
 
-::: warning OpenRouter Limitations
-**OpenRouter does NOT support embedding models.** OpenRouter is an API aggregator that only provides access to chat/completion models from various providers. If you need embedding capabilities, you must use a different provider that offers embedding APIs directly.
-:::
+OpenRouter supports embedding models through their API. You can access various embedding models from different providers through a single OpenRouter account.
 
-**Alternatives for OpenRouter users**:
-- Add a separate **OpenAI** provider for embeddings (`text-embedding-3-small`)
-- Add a separate **Google AI** provider for embeddings (`text-embedding-004`)
-- Use a **self-hosted** solution like Ollama with `nomic-embed-text`
-- Use **SiliconFlow** or other OpenAI-compatible providers that support embeddings
+**Configuration**:
+- Base URL: `https://openrouter.ai/api/v1`
+- Endpoint: `/embeddings`
+- See [OpenRouter Embeddings Documentation](https://openrouter.ai/docs/api/reference/embeddings) for available models
+
+**Available Models** (examples):
+| Model | Provider | Use Case |
+|-------|----------|----------|
+| `openai/text-embedding-3-small` | OpenAI | Cost-effective, good quality |
+| `openai/text-embedding-3-large` | OpenAI | Highest quality |
+| `cohere/embed-english-v3.0` | Cohere | English text |
+| `cohere/embed-multilingual-v3.0` | Cohere | Multilingual support |
+
+::: tip
+Check OpenRouter's model list for the latest available embedding models and pricing.
+:::
 
 ### Custom/Self-Hosted
 

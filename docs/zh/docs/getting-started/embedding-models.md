@@ -65,15 +65,24 @@ Anthropic 目前不提供独立的嵌入模型。如需与 Claude 配合使用�
 
 ### OpenRouter
 
-::: warning OpenRouter 限制
-**OpenRouter 不支持嵌入模型。** OpenRouter 是一个 API 聚合器，仅提供对各种供应商的聊天/补全模型的访问。如果您需要嵌入功能，必须使用直接提供嵌入 API 的其他供应商。
-:::
+OpenRouter 通过其 API 支持嵌入模型。您可以通过单个 OpenRouter 账户访问来自不同供应商的各种嵌入模型。
 
-**OpenRouter 用户的替代方案**：
-- 单独添加 **OpenAI** 供应商用于嵌入（`text-embedding-3-small`）
-- 单独添加 **Google AI** 供应商用于嵌入（`text-embedding-004`）
-- 使用 **自托管** 方案，如 Ollama 配合 `nomic-embed-text`
-- 使用 **SiliconFlow** 或其他支持嵌入的 OpenAI 兼容供应商
+**配置**：
+- 基础地址：`https://openrouter.ai/api/v1`
+- 端点：`/embeddings`
+- 查看 [OpenRouter 嵌入文档](https://openrouter.ai/docs/api/reference/embeddings) 了解可用模型
+
+**可用模型**（示例）：
+| 模型 | 供应商 | 用途 |
+|------|--------|------|
+| `openai/text-embedding-3-small` | OpenAI | 性价比高，质量好 |
+| `openai/text-embedding-3-large` | OpenAI | 最高质量 |
+| `cohere/embed-english-v3.0` | Cohere | 英文文本 |
+| `cohere/embed-multilingual-v3.0` | Cohere | 多语言支持 |
+
+::: tip
+查看 OpenRouter 的模型列表以了解最新可用的嵌入模型和定价。
+:::
 
 ### 自定义/自托管
 
