@@ -47,8 +47,7 @@ For automatic cloud backups, Kelivo supports WebDAV servers:
 - Nextcloud
 - ownCloud
 - Synology NAS
-- Box
-- 4shared
+- Box (WebDAV support varies by plan)
 
 ## Backup File Structure
 

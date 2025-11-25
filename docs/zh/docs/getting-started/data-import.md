@@ -47,8 +47,8 @@ Kelivo 的导入/导出功能支持：
 - Nextcloud
 - ownCloud
 - 群晖 NAS
-- 坚果云
-- Box
+- 坚果云（WebDAV 支持需付费订阅）
+- Box（WebDAV 支持因套餐而异）
 
 ## 备份文件结构
 
