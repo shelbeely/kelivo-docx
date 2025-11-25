@@ -51,6 +51,8 @@ export default defineConfig({
               text: 'Getting Started',
               items: [
                 { text: 'Quick Start', link: '/docs/getting-started/quick-start' },
+                { text: 'Data Import & Export', link: '/docs/getting-started/data-import' },
+                { text: 'Embedding Models', link: '/docs/getting-started/embedding-models' },
                 { text: 'FAQ', link: '/docs/getting-started/faq' },
                 { text: 'Terminology', link: '/docs/getting-started/terminology' }
               ]
@@ -104,6 +106,8 @@ export default defineConfig({
               text: '入门',
               items: [
                 { text: '快速开始', link: '/zh/docs/getting-started/quick-start' },
+                { text: '数据导入与导出', link: '/zh/docs/getting-started/data-import' },
+                { text: '嵌入模型', link: '/zh/docs/getting-started/embedding-models' },
                 { text: '常见问题', link: '/zh/docs/getting-started/faq' },
                 { text: '技术名词解释', link: '/zh/docs/getting-started/terminology' }
               ]
